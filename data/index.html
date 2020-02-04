@@ -38,32 +38,38 @@
 var animCnt, queCnt;
 var rCnt, cCnt, aCnt;
 var tr, td, tObj, dropDown, dropDownItem, slider, ltext;
-var animationList = Array();
-var animationText = "vectorFadeSwirl,vectorTrace,pointTest,vectorSwirl,verticalMovingDrag,polyRotator,washMatrix,fallingRainDrops,linerGradientUp,xWave,rotationalGradientSwipe,linerGradientOut,midCircle,rainbowFader,outerCircle,verSlitRainbows,pondDrops,midRainDrops,fallingRainDrops,rainbowFaderUpStream,yWave,rainbowSwipe,midRainDrops,horizontalMovingDrag,smoothMatrix,colourDrag";
+var animationNameList = Array();
+var animationDurationList = Array();
+//animationNames will be downlaoded ONLOAD from the MICRO as a plain text list like as hardcoded at the moment
+var animationNames = "vectorFadeSwirl,vectorTrace,pointTest,vectorSwirl,verticalMovingDrag,polyRotator,washMatrix,fallingRainDrops,linerGradientUp,xWave,rotationalGradientSwipe,linerGradientOut,midCircle,rainbowFader,outerCircle,verSlitRainbows,pondDrops,midRainDrops,fallingRainDrops,rainbowFaderUpStream,yWave,rainbowSwipe,midRainDrops,horizontalMovingDrag,smoothMatrix,colourDrag";
+//animationDurations will be downlaoded ONLOAD from the MICRO as a plain text list like as hardcoded at the moment
+var animationDurations = "10,10,10,10,10,10,10,10,10,10,10,10,10,10,10,10,10,10,10,10,10,10,10,10,10,10";
+//Its then built up into the QUE list animationQue by configureAnimations()
 var animationQue = Array();
 
 function init()
 {
+	//Set up animation Que array
 	configureAnimations();
+	//Build the UI using this list
 	buildTable();
 }
 
 function buildTable()
 {	
 	tObj = document.getElementById('t');
-	//for(rCnt=1; rCnt<animCnt+1; rCnt++)
-	for(rCnt=1; rCnt<queCnt+1; rCnt++)
+	for(rCnt=0; rCnt<queCnt; rCnt++)
 	{
 		//create row
-		tr = tObj.insertRow(rCnt);
-		tr.setAttribute('id', 'anind'+(rCnt-1));		
+		tr = tObj.insertRow(rCnt+1);
+		tr.setAttribute('id', 'anind'+rCnt);		
 
 		//animation index
 		td = document.createElement('td');
 		td = tr.insertCell(0);
 		td.setAttribute('class', 'cs');
 		ltext = document.createElement('div');
-		ltext.innerHTML = rCnt;
+		ltext.innerHTML = rCnt+1;
 		td.appendChild(ltext);
 		
 		//animation sleector cell
@@ -71,43 +77,34 @@ function buildTable()
 		td = tr.insertCell(1);
 		td.setAttribute('class', 'cs');
 		dropDown = document.createElement('select');
-		dropDown.setAttribute('id', "ap"+(rCnt-1));
-		for(aCnt=0; aCnt<queCnt; aCnt++)
+		dropDown.setAttribute('id', "ap"+rCnt);
+		dropDown.setAttribute('onChange', 'setAnimation('+rCnt+')');
+		
+		for(aCnt=0; aCnt<animCnt; aCnt++)
 		{
 			dropDownItem = document.createElement('option');
-			if(aCnt==(rCnt-1))
-			{
-				dropDownItem.setAttribute('value', aCnt-1)
-				//dropDownItem.text = animationList[aCnt];
-				dropDownItem.text = animationQue[aCnt][0];
-				dropDownItem.setAttribute('selected', 'true')
-			}
-			else
-			{
-				dropDownItem.setAttribute('value', aCnt-1)
-				//dropDownItem.text = animationList[aCnt];
-				dropDownItem.text = animationQue[aCnt][0];
-			}
+			dropDownItem.setAttribute('value', animationNameList[aCnt])
+			dropDownItem.text = animationNameList[aCnt];
 			dropDown.appendChild(dropDownItem);
 			td.appendChild(dropDown);
-		}
+		}	
 		//Duration Slider
 		td = document.createElement('td');
 		td = tr.insertCell(2);
 		td.setAttribute('class', 'cs');
 		slider = document.createElement('input');
-		slider.setAttribute('id', 'ad'+(rCnt-1));
+		slider.setAttribute('id', 'ad'+rCnt);
 		slider.setAttribute('class', 'slider');
 		slider.setAttribute('type', 'range');
 		slider.setAttribute('min', '1');
-		slider.setAttribute('max', '3600');
-		slider.setAttribute('value', '10');
-		slider.setAttribute('onChange', 'changeTB('+(rCnt-1)+')');
+		slider.setAttribute('max', '100');
+		slider.setAttribute('value', animationQue[rCnt][1]);
+		slider.setAttribute('onChange', 'setAnimationDuration('+rCnt+')');
 		td.appendChild(slider);
 		//slider value output
 		ltext = document.createElement('div');
-		ltext.setAttribute('id', 'st'+(rCnt-1));
-		ltext.innerHTML = 10+' S';
+		ltext.setAttribute('id', 'st'+rCnt);
+		ltext.innerHTML = animationQue[rCnt][1]+' S';
 		td.appendChild(ltext);
 		
 		//utility
@@ -115,20 +112,34 @@ function buildTable()
 		td = tr.insertCell(3);
 		td.setAttribute('class', 'cs');
 		ltext = document.createElement('div');
-		ltext.setAttribute('id', 'del'+(rCnt-1));
-		ltext.setAttribute('onClick', 'removeAnimationFromQue('+(rCnt-1)+')');
+		ltext.setAttribute('id', 'del'+rCnt);
+		ltext.setAttribute('onClick', 'removeAnimationFromQue('+rCnt+')');
 		ltext.innerHTML = 'Delete';
 		td.appendChild(ltext);
+	}
+	//set Selected Items
+	for(aCnt=0; aCnt<queCnt; aCnt++)
+	{
+		for(rCnt=0; rCnt<animCnt; rCnt++)
+		{
+			if(document.getElementById('ap'+aCnt).options[rCnt].value==animationQue[aCnt][0])
+			{
+				document.getElementById('ap'+aCnt).options[rCnt].selected=true;
+				break;
+			}
+		}
+		
 	}
 }
 
 function configureAnimations()
 {
-	animationList = animationText.split(',');
-	animCnt = animationList.length;
+	animationNameList = animationNames.split(',');
+	animationDurationList = animationDurations.split(',');
+	animCnt = animationNameList.length;
 	for(rCnt=0; rCnt<animCnt; rCnt++)
 	{
-		animationQue.push(Array(animationList[rCnt], 10));
+		animationQue.push(Array(animationNameList[rCnt], animationDurationList[rCnt]));
 	}
 	queCnt = animationQue.length;
 	
@@ -136,21 +147,32 @@ function configureAnimations()
 
 function clearUI()
 {
+	//Blows away the entire table UI
 	tObj = document.getElementById('t');
-	for(rCnt=queCnt-1; rCnt>0; rCnt--)
+	for(rCnt=queCnt; rCnt>0; rCnt--)
 	{
 		tObj.deleteRow(rCnt);
 	}
 }
 
-function changeTB(sliderIndex)
+function setAnimationDuration(sliderIndex)
 {
+	//sets the duration at onChange event of the selected slider
+	animationQue[sliderIndex][1] = document.getElementById('ad'+sliderIndex).value;
 	document.getElementById('st'+sliderIndex).innerHTML = document.getElementById('ad'+sliderIndex).value+' S';
+}
+
+function setAnimation(sliderIndex)
+{
+	//sets the animaition at onChange event of the selected animation picker
+	animationQue[sliderIndex][0] = document.getElementById('ap'+sliderIndex).value;
 }
 
 function removeAnimationFromQue(index)
 {
-	console.log(animationQue[index][0]);
+	//blow away the UI table
+	clearUI();
+	//Recreate the QUE without the deleted item
 	var tempAnimationQue = Array();
 	for(rCnt=0; rCnt<queCnt; rCnt++)
 	{
@@ -166,16 +188,19 @@ function removeAnimationFromQue(index)
 		animationQue.push(Array(tempAnimationQue[rCnt][0], tempAnimationQue[rCnt][1]));
 	}
 	delete tempAnimationQue;
-	clearUI();
+	//Rebuild the UI table
 	buildTable();
 	
 }
 
 function addAnimationToQue()
 {
-	animationQue.push(Array(animationList[0], 10));
-	queCnt = animationQue.length;
+	//Blow away the UI table
 	clearUI();
+	//Add a blank animation to the end of the que
+	animationQue.push(Array(animationNameList[0], 10));
+	queCnt = animationQue.length;
+	//rebuild the UI
 	buildTable();
 }
 
