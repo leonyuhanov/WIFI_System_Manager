@@ -1,0 +1,183 @@
+<html>
+<head><title>Configurator</title>
+<style type="text/css">
+.ts
+{
+	width: 100%;
+	border: 1px solid white;
+	cellpadding: 0;
+	cellspacing: 0;
+	text-align: center;
+}
+.cs
+{
+	border: 1px solid #EEEEEE;
+	cellpadding: 0;
+	cellspacing: 0;
+}
+.slider
+{
+	width: 100%;
+}
+</style>
+</head>
+
+<body onload=init()>
+<table class=ts id=t>
+<tr>
+	<td class=cs>Index</td>
+	<td class=cs>Animation</td>
+	<td class=cs>Duration</td>
+	<td class=cs>Util</td>
+</tr>
+</table>
+<div alight=right onClick=addAnimationToQue()>Add Animation</div>
+</body>
+
+<script language="JavaScript">
+var animCnt, queCnt;
+var rCnt, cCnt, aCnt;
+var tr, td, tObj, dropDown, dropDownItem, slider, ltext;
+var animationList = Array();
+var animationText = "vectorFadeSwirl,vectorTrace,pointTest,vectorSwirl,verticalMovingDrag,polyRotator,washMatrix,fallingRainDrops,linerGradientUp,xWave,rotationalGradientSwipe,linerGradientOut,midCircle,rainbowFader,outerCircle,verSlitRainbows,pondDrops,midRainDrops,fallingRainDrops,rainbowFaderUpStream,yWave,rainbowSwipe,midRainDrops,horizontalMovingDrag,smoothMatrix,colourDrag";
+var animationQue = Array();
+
+function init()
+{
+	configureAnimations();
+	buildTable();
+}
+
+function buildTable()
+{	
+	tObj = document.getElementById('t');
+	//for(rCnt=1; rCnt<animCnt+1; rCnt++)
+	for(rCnt=1; rCnt<queCnt+1; rCnt++)
+	{
+		//create row
+		tr = tObj.insertRow(rCnt);
+		tr.setAttribute('id', 'anind'+(rCnt-1));		
+
+		//animation index
+		td = document.createElement('td');
+		td = tr.insertCell(0);
+		td.setAttribute('class', 'cs');
+		ltext = document.createElement('div');
+		ltext.innerHTML = rCnt;
+		td.appendChild(ltext);
+		
+		//animation sleector cell
+		td = document.createElement('td');
+		td = tr.insertCell(1);
+		td.setAttribute('class', 'cs');
+		dropDown = document.createElement('select');
+		dropDown.setAttribute('id', "ap"+(rCnt-1));
+		for(aCnt=0; aCnt<queCnt; aCnt++)
+		{
+			dropDownItem = document.createElement('option');
+			if(aCnt==(rCnt-1))
+			{
+				dropDownItem.setAttribute('value', aCnt-1)
+				//dropDownItem.text = animationList[aCnt];
+				dropDownItem.text = animationQue[aCnt][0];
+				dropDownItem.setAttribute('selected', 'true')
+			}
+			else
+			{
+				dropDownItem.setAttribute('value', aCnt-1)
+				//dropDownItem.text = animationList[aCnt];
+				dropDownItem.text = animationQue[aCnt][0];
+			}
+			dropDown.appendChild(dropDownItem);
+			td.appendChild(dropDown);
+		}
+		//Duration Slider
+		td = document.createElement('td');
+		td = tr.insertCell(2);
+		td.setAttribute('class', 'cs');
+		slider = document.createElement('input');
+		slider.setAttribute('id', 'ad'+(rCnt-1));
+		slider.setAttribute('class', 'slider');
+		slider.setAttribute('type', 'range');
+		slider.setAttribute('min', '1');
+		slider.setAttribute('max', '3600');
+		slider.setAttribute('value', '10');
+		slider.setAttribute('onChange', 'changeTB('+(rCnt-1)+')');
+		td.appendChild(slider);
+		//slider value output
+		ltext = document.createElement('div');
+		ltext.setAttribute('id', 'st'+(rCnt-1));
+		ltext.innerHTML = 10+' S';
+		td.appendChild(ltext);
+		
+		//utility
+		td = document.createElement('td');
+		td = tr.insertCell(3);
+		td.setAttribute('class', 'cs');
+		ltext = document.createElement('div');
+		ltext.setAttribute('id', 'del'+(rCnt-1));
+		ltext.setAttribute('onClick', 'removeAnimationFromQue('+(rCnt-1)+')');
+		ltext.innerHTML = 'Delete';
+		td.appendChild(ltext);
+	}
+}
+
+function configureAnimations()
+{
+	animationList = animationText.split(',');
+	animCnt = animationList.length;
+	for(rCnt=0; rCnt<animCnt; rCnt++)
+	{
+		animationQue.push(Array(animationList[rCnt], 10));
+	}
+	queCnt = animationQue.length;
+	
+}
+
+function clearUI()
+{
+	tObj = document.getElementById('t');
+	for(rCnt=queCnt-1; rCnt>0; rCnt--)
+	{
+		tObj.deleteRow(rCnt);
+	}
+}
+
+function changeTB(sliderIndex)
+{
+	document.getElementById('st'+sliderIndex).innerHTML = document.getElementById('ad'+sliderIndex).value+' S';
+}
+
+function removeAnimationFromQue(index)
+{
+	console.log(animationQue[index][0]);
+	var tempAnimationQue = Array();
+	for(rCnt=0; rCnt<queCnt; rCnt++)
+	{
+		if(rCnt!=index)
+		{
+			tempAnimationQue.push(Array(animationQue[rCnt][0], animationQue[rCnt][1]));
+		}
+	}
+	queCnt = tempAnimationQue.length;
+	animationQue = Array();
+	for(rCnt=0; rCnt<queCnt; rCnt++)
+	{
+		animationQue.push(Array(tempAnimationQue[rCnt][0], tempAnimationQue[rCnt][1]));
+	}
+	delete tempAnimationQue;
+	clearUI();
+	buildTable();
+	
+}
+
+function addAnimationToQue()
+{
+	animationQue.push(Array(animationList[0], 10));
+	queCnt = animationQue.length;
+	clearUI();
+	buildTable();
+}
+
+</script>
+</html>
