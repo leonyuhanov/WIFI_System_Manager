@@ -1,0 +1,245 @@
+<html>
+<head><title>Configurator</title>
+<style type="text/css">
+.ts
+{
+	width: 100%;
+	border: 1px solid white;
+	cellpadding: 0;
+	cellspacing: 0;
+	text-align: center;
+}
+.cs
+{
+	border: 1px solid #EEEEEE;
+	cellpadding: 0;
+	cellspacing: 0;
+}
+.slider
+{
+	width: 100%;
+}
+</style>
+</head>
+
+<body onload=init()>
+<table class=ts id=t>
+<tr>
+	<td class=cs>Index</td>
+	<td class=cs>Animation</td>
+	<td class=cs>Duration</td>
+	<td class=cs>Util</td>
+</tr>
+</table>
+<div alight=right onClick=addAnimationToQue()>Add Animation</div>
+</body>
+
+<script language="JavaScript">
+var animCnt, queCnt;
+var rCnt, cCnt, aCnt;
+var tr, td, tObj, dropDown, dropDownItem, slider, ltext;
+var animationNameList = Array();
+var animationDurationList = Array();
+//animationNames will be downlaoded ONLOAD from the MICRO as a plain text list like as hardcoded at the moment
+var animationNames = "vectorFadeSwirl,vectorTrace,pointTest,vectorSwirl,verticalMovingDrag,polyRotator,washMatrix,fallingRainDrops,linerGradientUp,xWave,rotationalGradientSwipe,linerGradientOut,midCircle,rainbowFader,outerCircle,verSlitRainbows,pondDrops,midRainDrops,fallingRainDrops,rainbowFaderUpStream,yWave,rainbowSwipe,midRainDrops,horizontalMovingDrag,smoothMatrix,colourDrag";
+//animationDurations will be downlaoded ONLOAD from the MICRO as a plain text list like as hardcoded at the moment
+var animationDurations = "10,10,10,10,10,10,10,10,10,10,10,10,10,10,10,10,10,10,10,10,10,10,10,10,10,10";
+//Its then built up into the QUE list animationQue by configureAnimations()
+var animationQue = Array();
+var arrayBuffer;
+
+function init()
+{
+	//Set up animation Que array
+	configureAnimations();
+	//Build the UI using this list
+	buildTable();
+	//pull data from ESP
+	pull();
+}
+
+function buildTable()
+{	
+	tObj = document.getElementById('t');
+	for(rCnt=0; rCnt<queCnt; rCnt++)
+	{
+		//create row
+		tr = tObj.insertRow(rCnt+1);
+		tr.setAttribute('id', 'anind'+rCnt);		
+
+		//animation index
+		td = document.createElement('td');
+		td = tr.insertCell(0);
+		td.setAttribute('class', 'cs');
+		ltext = document.createElement('div');
+		ltext.innerHTML = rCnt+1;
+		td.appendChild(ltext);
+		
+		//animation sleector cell
+		td = document.createElement('td');
+		td = tr.insertCell(1);
+		td.setAttribute('class', 'cs');
+		dropDown = document.createElement('select');
+		dropDown.setAttribute('id', "ap"+rCnt);
+		dropDown.setAttribute('onChange', 'setAnimation('+rCnt+')');
+		
+		for(aCnt=0; aCnt<animCnt; aCnt++)
+		{
+			dropDownItem = document.createElement('option');
+			dropDownItem.setAttribute('value', animationNameList[aCnt])
+			dropDownItem.text = animationNameList[aCnt];
+			dropDown.appendChild(dropDownItem);
+			td.appendChild(dropDown);
+		}	
+		//Duration Slider
+		td = document.createElement('td');
+		td = tr.insertCell(2);
+		td.setAttribute('class', 'cs');
+		slider = document.createElement('input');
+		slider.setAttribute('id', 'ad'+rCnt);
+		slider.setAttribute('class', 'slider');
+		slider.setAttribute('type', 'range');
+		slider.setAttribute('min', '1');
+		slider.setAttribute('max', '255');
+		slider.setAttribute('value', animationQue[rCnt][1]);
+		slider.setAttribute('onChange', 'setAnimationDuration('+rCnt+')');
+		td.appendChild(slider);
+		//slider value output
+		ltext = document.createElement('div');
+		ltext.setAttribute('id', 'st'+rCnt);
+		ltext.innerHTML = animationQue[rCnt][1]+' S';
+		td.appendChild(ltext);
+		
+		//utility
+		td = document.createElement('td');
+		td = tr.insertCell(3);
+		td.setAttribute('class', 'cs');
+		ltext = document.createElement('div');
+		ltext.setAttribute('id', 'del'+rCnt);
+		ltext.setAttribute('onClick', 'removeAnimationFromQue('+rCnt+')');
+		ltext.innerHTML = 'Delete';
+		td.appendChild(ltext);
+	}
+	//set Selected Items
+	for(aCnt=0; aCnt<queCnt; aCnt++)
+	{
+		for(rCnt=0; rCnt<animCnt; rCnt++)
+		{
+			if(document.getElementById('ap'+aCnt).options[rCnt].value==animationQue[aCnt][0])
+			{
+				document.getElementById('ap'+aCnt).options[rCnt].selected=true;
+				break;
+			}
+		}
+		
+	}
+}
+
+function configureAnimations()
+{
+	animationNameList = animationNames.split(',');
+	animationDurationList = animationDurations.split(',');
+	animCnt = animationNameList.length;
+	for(rCnt=0; rCnt<animCnt; rCnt++)
+	{
+		animationQue.push(Array(animationNameList[rCnt], animationDurationList[rCnt]));
+	}
+	queCnt = animationQue.length;
+	
+}
+
+function clearUI()
+{
+	//Blows away the entire table UI
+	tObj = document.getElementById('t');
+	for(rCnt=queCnt; rCnt>0; rCnt--)
+	{
+		tObj.deleteRow(rCnt);
+	}
+}
+
+function setAnimationDuration(sliderIndex)
+{
+	//sets the duration at onChange event of the selected slider
+	animationQue[sliderIndex][1] = document.getElementById('ad'+sliderIndex).value;
+	document.getElementById('st'+sliderIndex).innerHTML = document.getElementById('ad'+sliderIndex).value+' S';
+}
+
+function setAnimation(sliderIndex)
+{
+	//sets the animaition at onChange event of the selected animation picker
+	animationQue[sliderIndex][0] = document.getElementById('ap'+sliderIndex).value;
+}
+
+function removeAnimationFromQue(index)
+{
+	//blow away the UI table
+	clearUI();
+	//Recreate the QUE without the deleted item
+	var tempAnimationQue = Array();
+	for(rCnt=0; rCnt<queCnt; rCnt++)
+	{
+		if(rCnt!=index)
+		{
+			tempAnimationQue.push(Array(animationQue[rCnt][0], animationQue[rCnt][1]));
+		}
+	}
+	queCnt = tempAnimationQue.length;
+	animationQue = Array();
+	for(rCnt=0; rCnt<queCnt; rCnt++)
+	{
+		animationQue.push(Array(tempAnimationQue[rCnt][0], tempAnimationQue[rCnt][1]));
+	}
+	delete tempAnimationQue;
+	//Rebuild the UI table
+	buildTable();
+	
+}
+
+function addAnimationToQue()
+{
+	//Blow away the UI table
+	clearUI();
+	//Add a blank animation to the end of the que
+	animationQue.push(Array(animationNameList[0], 10));
+	queCnt = animationQue.length;
+	//rebuild the UI
+	buildTable();
+}
+
+function pull()
+{
+	var byteCnt=0, innerQCnt=0;
+	
+	var oReq = new XMLHttpRequest();
+	oReq.open("GET", "/pull", true);
+	oReq.responseType = "arraybuffer";
+	oReq.onload = function (oEvent) 
+	{
+		arrayBuffer = oReq.response;
+		if (arrayBuffer)
+		{
+			//blow away the UI table
+			clearUI();
+			//convert into bytes
+			var byteArray = new Uint8Array(arrayBuffer);
+			//clear que
+			animationQue = new Array();
+			//dumpt byte indexes into animation Que
+			for(byteCnt=0; byteCnt<byteArray.byteLength/2; byteCnt++)
+			{
+			  animationQue.push(Array(animationNameList[byteArray[byteCnt]], 10));
+			}
+			for(byteCnt; byteCnt<byteArray.byteLength; byteCnt++)
+			{
+			  animationQue[innerQCnt][1] = byteArray[byteCnt];
+			  innerQCnt++;
+			}			
+			queCnt = byteArray.byteLength/2;
+			buildTable();
+		} 
+	};
+	oReq.send(null);
+}
+</script>
+</html>
