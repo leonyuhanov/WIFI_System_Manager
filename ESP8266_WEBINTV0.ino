@@ -1,6 +1,7 @@
 #include <ESP8266WiFi.h>
 #include <ESP8266WebServer.h>
 #include "FS.h"
+#include <string>
 
 const char* configFilePath="/configFile";
 unsigned short int configFileSize=0;
@@ -45,7 +46,7 @@ void setup()
   //init Web server
   server.on("/", handleRoot);
   server.on("/pull", handlePull);
-  server.on("/push", handlePush);
+  server.on("/push", HTTP_POST, handlePush);
   
   server.begin();
 
@@ -177,7 +178,7 @@ void setupAnimationQue()
     
     //delete for testing
     fileObject.close();
-    SPIFFS.remove(configFilePath);    
+    //SPIFFS.remove(configFilePath);    
     /*
     //verify load
     for(qCnt=0; qCnt<queLength; qCnt++)
@@ -198,7 +199,7 @@ void loop()
   fileObject = SPIFFS.open(indexPageFilePath, "r");
   if(!fileObject)
   {
-      Serial.println("\r\n- failed to open file for reading");
+      Serial.println("\r\nFAILED to open UI file for reading");
       delay(100000);
       return;
   }
@@ -253,10 +254,41 @@ void handlePull()
     animationIndexList[qCnt] = animationQue[innerQcnt][1];
     innerQcnt++;
   }  
+  server.sendHeader("Access-Control-Allow-Origin", "*", true);
   server.send(200, "image/gif", animationIndexList, queLength*2);
   Serial.printf("\r\nServed PULL request\tSent\t%d Bytes", queLength*2);
 }
 void handlePush()
 {
+  unsigned short int dataCnt=0, qCnt=0, configFileSize=0;
+  File fileObject;
+  
+  //Respond to the UI
+  server.sendHeader("Access-Control-Allow-Origin", "*", true);
+  server.send(200, "text/html", "OK");
 
+  //Recreate the animation que array
+  queLength = server.arg(0).length()/2;
+  animationQue = new int16_t*[queLength];
+  for(qCnt=0; qCnt<queLength; qCnt++)
+  {
+    //init a new que item
+    animationQue[qCnt] = new int16_t[2];
+    //set the animation index to default ordered list index qCnt
+    animationQue[qCnt][0] = server.arg(0)[qCnt];
+    //set the animation timeout to the default defaultAnimationTimeout
+    animationQue[qCnt][1] = server.arg(0)[queLength+qCnt];
+  }
+    
+  //create new config file and reboot
+  fileObject = SPIFFS.open(configFilePath, "w");
+  for(qCnt=0; qCnt<queLength; qCnt++)
+  {
+    configFileSize += fileObject.write((byte*)&animationQue[qCnt][0], sizeof(animationQue[qCnt][0]));
+    configFileSize += fileObject.write((byte*)&animationQue[qCnt][1], sizeof(animationQue[qCnt][1]));
+  }
+  fileObject.close();
+  Serial.printf("\r\nWrote\t%d\tbytes\r\nReboot in 5s...", configFileSize);
+  delay(5000);
+  ESP.restart();
 }
