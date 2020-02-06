@@ -1,11 +1,12 @@
 # WIFI_System_Manager
 A web based configuration system for wearable applications
 
+SET ESP SPIFS size to 2MB in 
+
 1. Upload to ESP8266 with "ERASE ALL FLASH CONTENTS"
-2. Wait for FS init on serail monitor
+2. Wait for SPIFS init(format takes 5-10 Seconds) on serail monitor
 3. Use FS manager to upload the file "index" in the data folder(ill remove the html its just there for ui testing)
-2. Upload code again with "Sketch+WIFI" settings only
-4. Use FS manager to upload the file "index" in the data folder AGAIN
+2. Upload code again with "Sketch ONLY" settings only
 
 To load UI:
 1. Connect to the ESP network
@@ -22,7 +23,6 @@ Web IP:  10.10.10.1
 7. pull() stores the data in a byteArray the 1st half are the animation indexes, the second half are the durations
 8. pull() clears UI and rebuilds the UI table
 
-TO DO:
-1. PUSH data to the ESP
+PUSH now works as well
 
 
