@@ -4,9 +4,9 @@ A web based configuration system for wearable applications
 SET ESP SPIFS size to 2MB in 
 
 1. Upload to ESP8266 with "ERASE ALL FLASH CONTENTS"
-2. Wait for SPIFS init(format takes 5-10 Seconds) on serail monitor
+2. Wait for SPIFS init(format takes 5-10 Seconds) on serail monitor. the esp will reboot after its created its default file system
 3. Use FS manager to upload the file "index" in the data folder(ill remove the html its just there for ui testing)
-2. Upload code again with "Sketch ONLY" settings only
+4. Manualy restart the ESP via reboot push button
 
 To load UI:
 1. Connect to the ESP network
