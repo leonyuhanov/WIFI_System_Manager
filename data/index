@@ -31,7 +31,9 @@
 	<td class=cs>Util</td>
 </tr>
 </table>
-<div alight=right onClick=addAnimationToQue()>Add Animation</div>
+<div align=left onClick=addAnimationToQue()>Add Animation</div>
+</br>
+<div align=right onClick=push()>Save to ESP</div>
 </body>
 
 <script language="JavaScript">
