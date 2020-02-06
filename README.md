@@ -23,6 +23,5 @@ Web IP:  10.10.10.1
 7. pull() stores the data in a byteArray the 1st half are the animation indexes, the second half are the durations
 8. pull() clears UI and rebuilds the UI table
 
-PUSH now works as well
-
+UI & ESP now support PUSH to save the UI config to the ESP SPIFS
 
