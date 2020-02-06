@@ -39,8 +39,8 @@ void setup()
   delay(100);
   
   Serial.printf("\r\n\tWIFI_AP MAC\t");
-  Serial.println(WiFi.softAPmacAddress());
-  Serial.printf("AP IP Address\t");
+  Serial.print(WiFi.softAPmacAddress());
+  Serial.printf("\r\n\tAP IP Address\t");
   Serial.print(WiFi.softAPIP());
 
   //init Web server
@@ -51,7 +51,9 @@ void setup()
   server.begin();
 
   //init FS
+  Serial.printf("\r\n\tSetting up SPIFS...");
   SPIFFS.begin();
+  Serial.printf("\tSPIFS READY!");
 
   setupAnimationQue();
 }
@@ -89,23 +91,12 @@ void setupAnimationQue()
     qCnt++;
     aLCnt++;
   }
-  /*
-  //verify list
-  Serial.printf("\r\nImported\t%d\tanimations", qCnt);
-  for(qCnt=0; qCnt<defultQueLength; qCnt++)
-  {
-    Serial.printf("\r\n%d", qCnt);
-    blockSize = strlen(animationArray[qCnt]);
-    Serial.printf("\t%dbytes\t[", blockSize);
-    Serial.print(animationArray[qCnt]);
-    Serial.printf("]");
-  }
-  */
   
   //Read the configuration file
   fileObject = SPIFFS.open(configFilePath, "r");
   if(!fileObject)
   {
+    //  IF NOT CONFIG FILE EXISTS IN SPIFS CREATE ONE
     //Reset to default
     //Set up the animation que array
     animationQue = new int16_t*[queLength];
@@ -123,6 +114,7 @@ void setupAnimationQue()
     if(!fileObject)
     {
       //somethign went wrong here
+      Serial.printf("\r\n\r\nSOME KIND OF WEIRD EROROR??? CAN NOT OPEN FILE FOR WRITING");
     }
     else
     {
@@ -131,10 +123,9 @@ void setupAnimationQue()
         configFileSize += fileObject.write((byte*)&animationQue[qCnt][0], sizeof(animationQue[qCnt][0]));
         configFileSize += fileObject.write((byte*)&animationQue[qCnt][1], sizeof(animationQue[qCnt][1]));
       }
-      Serial.printf("\r\nWrote\t%d\tbytes", configFileSize);
-      //delete file for testing
       fileObject.close();
-      //SPIFFS.remove(configFilePath);
+      Serial.printf("\r\nDefault Configuration file saved to SPIFS\tWrote\t%d\tbytes Rebooting...", configFileSize);
+      ESP.restart();
     }
   }
   else
@@ -175,19 +166,7 @@ void setupAnimationQue()
       usiIn = usiIn | usiIn2;
       animationQue[qCnt][1] = usiIn;
     }
-    
-    //delete for testing
-    fileObject.close();
-    //SPIFFS.remove(configFilePath);    
-    /*
-    //verify load
-    for(qCnt=0; qCnt<queLength; qCnt++)
-    {
-      Serial.printf("\r\n%d\t[", qCnt);
-      Serial.print( animationArray[animationQue[qCnt][0]] );
-      Serial.printf("]\t[%d]", animationQue[qCnt][1]);
-    }
-    */
+    fileObject.close();  
   }
 }
 
@@ -199,13 +178,13 @@ void loop()
   fileObject = SPIFFS.open(indexPageFilePath, "r");
   if(!fileObject)
   {
-      Serial.println("\r\nFAILED to open UI file for reading");
+      Serial.println("\r\n\tFAILED to open UI file for reading please UPLOAD index file from DATA directory via SKETCH DATA UPLAOD TOOL");
       delay(100000);
       return;
   }
   else
   {
-    Serial.print("\r\nUI File present");
+    Serial.print("\r\n\tUI File present");
     indexFileSize = fileObject.size();
     fileObject.close();
     Serial.printf("\t%d\tBytes\r\n", indexFileSize); 
@@ -288,7 +267,6 @@ void handlePush()
     configFileSize += fileObject.write((byte*)&animationQue[qCnt][1], sizeof(animationQue[qCnt][1]));
   }
   fileObject.close();
-  Serial.printf("\r\nWrote\t%d\tbytes\r\nReboot in 5s...", configFileSize);
-  delay(5000);
+  Serial.printf("\r\Custom Configuration file saved to SPIFS\t Wrote\t%d\tbytes\r\nRebooting...", configFileSize);
   ESP.restart();
 }
