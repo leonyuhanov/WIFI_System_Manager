@@ -20,42 +20,66 @@ const unsigned short int animationListSize=360;
 const byte defultQueLength = 26;
 const char* defaultAnimationList = "vectorFadeSwirl,vectorTrace,pointTest,vectorSwirl,verticalMovingDrag,polyRotator,washMatrix,fallingRainDrops,linerGradientUp,xWave,rotationalGradientSwipe,linerGradientOut,midCircle,rainbowFader,outerCircle,verSlitRainbows,pondDrops,midRainDrops,fallingRainDrops,rainbowFaderUpStream,yWave,rainbowSwipe,midRainDrops,horizontalMovingDrag,smoothMatrix,colourDrag";
 char** animationArray;
-const int16_t defaultAnimationTimeout = 60;
+const int16_t defaultAnimationTimeout = 15;
 //Custom settings
 unsigned short int queLength = 0;
 int16_t** animationQue;
+
+//Standard system variables when inserted into working animation lib
+const byte configButton = 0;
+byte systemMode = 0;
+unsigned short int animationIndex=0;
+unsigned long timeData[3];
 
 void setup()
 {  
   Serial.begin(115200);
   Serial.printf("\r\n\r\n\r\n");
 
-  //configure Access Point
-  WiFi.mode(WIFI_AP);
-  WiFi.enableAP(true);
-  delay(100);
-  WiFi.softAPConfig(local_ip, gateway, subnet);
-  WiFi.softAP(ssid, password, 1, 0, 2);
-  delay(100);
+  //Init File System
+  initFS();
+  //Load animation que from SPIFS OR set up a new one into SPIFS and then load
+  setupAnimationQue();
   
-  Serial.printf("\r\n\tWIFI_AP MAC\t");
-  Serial.print(WiFi.softAPmacAddress());
-  Serial.printf("\r\n\tAP IP Address\t");
-  Serial.print(WiFi.softAPIP());
-
-  //init Web server
-  server.on("/", handleRoot);
-  server.on("/pull", handlePull);
-  server.on("/push", HTTP_POST, handlePush);
+  //Set up Input button for testing
+  pinMode(configButton, INPUT);
+  systemMode = digitalRead(configButton);
+  if(systemMode==1)
+  {
+    //Beggin standard animation system with whatever animtaion que the system has in the SPI flash
+    Serial.printf("\r\n\tBooting into normal opration mode using que loaded from SPIFS....");
+    WiFi.mode(WIFI_OFF);
+  }
+  else if(systemMode==0)
+  {
+    //Begin Config mode
+    Serial.printf("\r\n\tBooting into WEB UI configuration mode...");
+    //configure Access Point
+    WiFi.mode(WIFI_AP);
+    WiFi.enableAP(true);
+    delay(100);
+    WiFi.softAPConfig(local_ip, gateway, subnet);
+    WiFi.softAP(ssid, password, 1, 0, 2);
+    delay(100);
+    Serial.printf("\r\n\tWIFI_AP MAC\t");
+    Serial.print(WiFi.softAPmacAddress());
+    Serial.printf("\r\n\tAP IP Address\t");
+    Serial.print(WiFi.softAPIP());
+    //init Web server
+    server.on("/", handleRoot);
+    server.on("/pull", handlePull);
+    server.on("/push", HTTP_POST, handlePush);
+    server.begin();
+   }
   
-  server.begin();
+   
+}
 
-  //init FS
+void initFS()
+{
   Serial.printf("\r\n\tSetting up SPIFS...");
   SPIFFS.begin();
   Serial.printf("\tSPIFS READY!");
-
-  setupAnimationQue();
 }
 
 void setupAnimationQue()
@@ -96,9 +120,9 @@ void setupAnimationQue()
   fileObject = SPIFFS.open(configFilePath, "r");
   if(!fileObject)
   {
-    //  IF NOT CONFIG FILE EXISTS IN SPIFS CREATE ONE
-    //Reset to default
-    //Set up the animation que array
+    //  IF NO CONFIG FILE EXISTS IN SPIFS CREATE ONE
+    //  Reset to default
+    //  Set up the animation que array
     animationQue = new int16_t*[queLength];
     for(qCnt=0; qCnt<queLength; qCnt++)
     {
@@ -166,31 +190,76 @@ void setupAnimationQue()
       usiIn = usiIn | usiIn2;
       animationQue[qCnt][1] = usiIn;
     }
-    fileObject.close();  
+    fileObject.close(); 
+    Serial.printf("\r\nConfiguration loaded!"); 
   }
 }
 
 void loop()
 {
-  File fileObject;
-  
-  indexFileSize = 0;
-  fileObject = SPIFFS.open(indexPageFilePath, "r");
-  if(!fileObject)
+  //Config Mode
+  if(systemMode==0)
   {
-      Serial.println("\r\n\tFAILED to open UI file for reading please UPLOAD index file from DATA directory via SKETCH DATA UPLAOD TOOL");
-      delay(100000);
-      return;
+    File fileObject; 
+    indexFileSize = 0;
+    fileObject = SPIFFS.open(indexPageFilePath, "r");
+    if(!fileObject)
+    {
+        Serial.println("\r\n\tFAILED to open UI file for reading please UPLOAD index file from DATA directory via SKETCH DATA UPLAOD TOOL");
+        delay(100000);
+        return;
+    }
+    else
+    {
+      Serial.print("\r\n\tUI File present");
+      indexFileSize = fileObject.size();
+      fileObject.close();
+      Serial.printf("\t%d\tBytes\r\n", indexFileSize); 
+      blankFunction();
+    }
   }
-  else
+  //System Mode
+  else if(systemMode==1)
   {
-    Serial.print("\r\n\tUI File present");
-    indexFileSize = fileObject.size();
-    fileObject.close();
-    Serial.printf("\t%d\tBytes\r\n", indexFileSize); 
-    blankFunction();
+    Serial.printf("\r\nLaunch animation\t%d\tfor\t%d\t seconds\tQue Index\t%d", animationQue[animationIndex][0], animationQue[animationIndex][1], animationIndex);
+    //Launch animation
+    runAnimation(animationQue[animationIndex][0], animationQue[animationIndex][1]*1000);
+    //Once animation times out increment animation index
+    animationIndex = (animationIndex+1)%queLength;
   }
 }
+
+void runAnimation(unsigned short int animationIndex, unsigned short int animationDuration)
+{
+  switch(animationIndex)
+  {
+    case  0:  startTimer(animationDuration);  
+              animationOne(1);
+              break;
+              
+    case  1:  startTimer(animationDuration);  
+              animationOne(1);
+              break;
+              
+    default:    break;
+  }
+}
+
+//animations
+void animationOne(byte colourIncrement)
+{
+  //A blank animation template
+  while(true)
+  {
+    if(hasTimedOut())
+    {
+      return;
+    }
+    yield();
+  }
+}
+//animations
+
 void blankFunction()
 {
   Serial.printf("\r\nSystem Ready\r\n");
@@ -269,4 +338,18 @@ void handlePush()
   fileObject.close();
   Serial.printf("\r\Custom Configuration file saved to SPIFS\t Wrote\t%d\tbytes\r\nRebooting...", configFileSize);
   ESP.restart();
+}
+byte hasTimedOut()
+{
+  timeData[1] = millis();
+  if(timeData[2] < timeData[1]-timeData[0])
+  {
+    return 1;
+  }
+  return 0;
+}
+void startTimer(unsigned long durationInMillis)
+{
+  timeData[0] = millis(); 
+  timeData[2] = durationInMillis;
 }
