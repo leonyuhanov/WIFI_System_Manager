@@ -1,7 +1,57 @@
 # WIFI_System_Manager
-A web based configuration system for wearable applications
+A web based configuration system for wearable applications using an ESP8266
+You could reconfigure this for the ESP32 by changing a few lines of code, specific to WIFI, everything else should work the same way as long as you have an SPIFS set up
 
-SET ESP SPIFS size to 2MB in 
+# A Note on using this in the real world
+Im using the FLASH button on the ESP8266 module to put the device into config mode. In real world systems, you will need to change this to a usable GPIO pin
+
+# Pre Flight
+The main code has the following var
+```C++
+const char* defaultAnimationList = "vectorFadeSwirl,vectorTrace,pointTest,vectorSwirl,verticalMovingDrag,polyRotator,washMatrix,fallingRainDrops,linerGradientUp,xWave,rotationalGradientSwipe,linerGradientOut,midCircle,rainbowFader,outerCircle,verSlitRainbows,pondDrops,midRainDrops,fallingRainDrops,rainbowFaderUpStream,yWave,rainbowSwipe,midRainDrops,horizontalMovingDrag,smoothMatrix,colourDrag";
+```
+This C string is MY list of animation functions. For your application, you need to fill this out with whatever friendly names you like. EG if you have 5 animations with simple names like this:
+
+```C++
+const char* defaultAnimationList = "Animation1,Animation2,Animation3,Animation4,Animation5";
+```
+This list is used to populate the default configuration & is sent as the list of available animations to the UI. a "," is used a seperator. DO not use spaces or any charectors that your C compiler would like you to use in naming a function. Keep it simple
+
+You will need then need to populate the file with your animations and create an ORDERED switch statment call for each
+```C++
+void runAnimation(unsigned short int animationIndex, unsigned short int animationDuration)
+{
+  switch(animationIndex)
+  {
+    case  0:  startTimer(animationDuration);  
+              animationOne(1);
+              break;
+              
+    case  1:  startTimer(animationDuration);  
+              animationTwo(1);
+              break;
+    case N:   .....
+              break;
+    default:    break;
+  }
+}
+```
+My animation systems use a set of functions that TIME their runtime, I have included them in this code:
+```C++
+startTimer(unsigned long durationInMillis);
+//STart a timer to expire in 1 second
+startTimer(1000);
+
+while(!hasTimedOut())
+{
+  dome some animating
+}
+```
+hasTimedOut() will return 1 if its timer has expired. This is how I do it, its not nessesarily the best way :)
+
+# How to upload to your ESP8266
+
+SET ESP SPIFS size to 2MB 
 
 1. Upload to ESP8266 with "ERASE ALL FLASH CONTENTS"
 2. Wait for SPIFS init(format takes 5-10 Seconds) on serail monitor. the esp will reboot after its created its default file system
