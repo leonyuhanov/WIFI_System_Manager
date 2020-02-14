@@ -203,7 +203,12 @@ function clearUI()
 
 function setAnimationDuration(sliderIndex)
 {
-	animationQue[sliderIndex][1] = document.getElementById('ad'+sliderIndex).value;
+	var value = document.getElementById('ad'+sliderIndex).value
+if(value<0 || value>255)
+{
+value = 10;
+}
+animationQue[sliderIndex][1] = value;
 }
 
 function setAnimation(sliderIndex)
