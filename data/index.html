@@ -228,7 +228,7 @@ function removeAnimationFromQue(index)
 	{
 		animationQue.push(Array(tempAnimationQue[rCnt][0], tempAnimationQue[rCnt][1]));
 	}
-	//delete tempAnimationQue;
+	delete tempAnimationQue;
 	buildTable();
 
 	setTimeout(function(){
