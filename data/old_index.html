@@ -31,9 +31,7 @@
 	<td class=cs>Util</td>
 </tr>
 </table>
-<div align=left onClick=addAnimationToQue()>Add Animation</div>
-</br>
-<div align=right onClick=push()>Save to ESP</div>
+<div alight=right onClick=addAnimationToQue()>Add Animation</div>
 </body>
 
 <script language="JavaScript">
@@ -42,16 +40,19 @@ var rCnt, cCnt, aCnt;
 var tr, td, tObj, dropDown, dropDownItem, slider, ltext;
 var animationNameList = Array();
 var animationDurationList = Array();
+//animationNames will be downlaoded ONLOAD from the MICRO as a plain text list like as hardcoded at the moment
 var animationNames = "vectorFadeSwirl,vectorTrace,pointTest,vectorSwirl,verticalMovingDrag,polyRotator,washMatrix,fallingRainDrops,linerGradientUp,xWave,rotationalGradientSwipe,linerGradientOut,midCircle,rainbowFader,outerCircle,verSlitRainbows,pondDrops,midRainDrops,fallingRainDrops,rainbowFaderUpStream,yWave,rainbowSwipe,midRainDrops,horizontalMovingDrag,smoothMatrix,colourDrag";
+//animationDurations will be downlaoded ONLOAD from the MICRO as a plain text list like as hardcoded at the moment
 var animationDurations = "10,10,10,10,10,10,10,10,10,10,10,10,10,10,10,10,10,10,10,10,10,10,10,10,10,10";
+//Its then built up into the QUE list animationQue by configureAnimations()
 var animationQue = Array();
-var arrayBuffer;
 
 function init()
 {
+	//Set up animation Que array
 	configureAnimations();
+	//Build the UI using this list
 	buildTable();
-	pull();
 }
 
 function buildTable()
@@ -59,9 +60,11 @@ function buildTable()
 	tObj = document.getElementById('t');
 	for(rCnt=0; rCnt<queCnt; rCnt++)
 	{
+		//create row
 		tr = tObj.insertRow(rCnt+1);
 		tr.setAttribute('id', 'anind'+rCnt);		
 
+		//animation index
 		td = document.createElement('td');
 		td = tr.insertCell(0);
 		td.setAttribute('class', 'cs');
@@ -69,6 +72,7 @@ function buildTable()
 		ltext.innerHTML = rCnt+1;
 		td.appendChild(ltext);
 		
+		//animation sleector cell
 		td = document.createElement('td');
 		td = tr.insertCell(1);
 		td.setAttribute('class', 'cs');
@@ -84,6 +88,7 @@ function buildTable()
 			dropDown.appendChild(dropDownItem);
 			td.appendChild(dropDown);
 		}	
+		//Duration Slider
 		td = document.createElement('td');
 		td = tr.insertCell(2);
 		td.setAttribute('class', 'cs');
@@ -92,16 +97,17 @@ function buildTable()
 		slider.setAttribute('class', 'slider');
 		slider.setAttribute('type', 'range');
 		slider.setAttribute('min', '1');
-		slider.setAttribute('max', '255');
+		slider.setAttribute('max', '100');
 		slider.setAttribute('value', animationQue[rCnt][1]);
 		slider.setAttribute('onChange', 'setAnimationDuration('+rCnt+')');
-		
 		td.appendChild(slider);
+		//slider value output
 		ltext = document.createElement('div');
 		ltext.setAttribute('id', 'st'+rCnt);
 		ltext.innerHTML = animationQue[rCnt][1]+' S';
 		td.appendChild(ltext);
 		
+		//utility
 		td = document.createElement('td');
 		td = tr.insertCell(3);
 		td.setAttribute('class', 'cs');
@@ -111,6 +117,7 @@ function buildTable()
 		ltext.innerHTML = 'Delete';
 		td.appendChild(ltext);
 	}
+	//set Selected Items
 	for(aCnt=0; aCnt<queCnt; aCnt++)
 	{
 		for(rCnt=0; rCnt<animCnt; rCnt++)
@@ -140,6 +147,7 @@ function configureAnimations()
 
 function clearUI()
 {
+	//Blows away the entire table UI
 	tObj = document.getElementById('t');
 	for(rCnt=queCnt; rCnt>0; rCnt--)
 	{
@@ -149,18 +157,22 @@ function clearUI()
 
 function setAnimationDuration(sliderIndex)
 {
+	//sets the duration at onChange event of the selected slider
 	animationQue[sliderIndex][1] = document.getElementById('ad'+sliderIndex).value;
 	document.getElementById('st'+sliderIndex).innerHTML = document.getElementById('ad'+sliderIndex).value+' S';
 }
 
 function setAnimation(sliderIndex)
 {
+	//sets the animaition at onChange event of the selected animation picker
 	animationQue[sliderIndex][0] = document.getElementById('ap'+sliderIndex).value;
 }
 
 function removeAnimationFromQue(index)
 {
+	//blow away the UI table
 	clearUI();
+	//Recreate the QUE without the deleted item
 	var tempAnimationQue = Array();
 	for(rCnt=0; rCnt<queCnt; rCnt++)
 	{
@@ -176,86 +188,21 @@ function removeAnimationFromQue(index)
 		animationQue.push(Array(tempAnimationQue[rCnt][0], tempAnimationQue[rCnt][1]));
 	}
 	delete tempAnimationQue;
+	//Rebuild the UI table
 	buildTable();
 	
 }
 
 function addAnimationToQue()
 {
+	//Blow away the UI table
 	clearUI();
+	//Add a blank animation to the end of the que
 	animationQue.push(Array(animationNameList[0], 10));
 	queCnt = animationQue.length;
+	//rebuild the UI
 	buildTable();
 }
 
-function pull()
-{
-	var byteCnt=0, innerQCnt=0;
-	
-	var oReq = new XMLHttpRequest();
-	oReq.open("GET", "http://10.10.10.1/pull", true);
-	oReq.responseType = "arraybuffer";
-	oReq.onload = function (oEvent) 
-	{
-		arrayBuffer = oReq.response;
-		if (arrayBuffer)
-		{
-			clearUI();
-			var byteArray = new Uint8Array(arrayBuffer);
-			animationQue = new Array();
-			for(byteCnt=0; byteCnt<byteArray.byteLength/2; byteCnt++)
-			{
-			  animationQue.push(Array(animationNameList[byteArray[byteCnt]], 10));
-			}
-			for(byteCnt; byteCnt<byteArray.byteLength; byteCnt++)
-			{
-			  animationQue[innerQCnt][1] = byteArray[byteCnt];
-			  innerQCnt++;
-			}			
-			queCnt = byteArray.byteLength/2;
-			buildTable();
-		} 
-	};
-	oReq.send(null);
-}
-
-function push()
-{
-	var byteArray = new Uint8Array(queCnt*2);
-	var qlCnt = 0, qLDCnt=0;
-	var testSTring='';
-	var oReq = new XMLHttpRequest();
-	
-	for(qlCnt=0; qlCnt<queCnt; qlCnt++)
-	{
-		byteArray[qLDCnt] = getAnimationIndex(animationQue[qlCnt][0]);
-		testSTring+=getAnimationIndex(animationQue[qlCnt][0])+'|';
-		qLDCnt++;
-	}
-	for(qlCnt=0; qlCnt<queCnt; qlCnt++)
-	{
-		byteArray[qLDCnt] = animationQue[qlCnt][1];
-		testSTring+=animationQue[qlCnt][1]+',';
-		qLDCnt++;
-	}
-	oReq.open("POST", 'http://10.10.10.1/push', true);
-	oReq.onload = function (oEvent)
-	{
-		  console.log("Config Sent. Got back["+oReq.response+"]");
-	};
-	oReq.send(byteArray);
-}
-
-function getAnimationIndex(animationName)
-{
-	var aICnt=0;
-	for(aICnt=0; aICnt<animationNameList.length; aICnt++)
-	{
-		if(animationNameList[aICnt]==animationName)
-		{
-			return aICnt;
-		}
-	}
-}
 </script>
 </html>

@@ -1,58 +1,121 @@
 <html>
 <head><title>Configurator</title>
 <style type="text/css">
-.ts
-{
-	width: 100%;
-	border: 1px solid white;
-	cellpadding: 0;
-	cellspacing: 0;
+html, body{
+	background: black;
+	color: white;
+	font-family: Arial;
+	overflow-x: hidden;
+}
+h1{
+	animation-name: shrink;
+	animation-duration: 2s;
+	position: relative;
+}
+@keyframes shrink {
+  0%, 25% {top: 30%;}
+  100% {top: 0;}
+}
+h1, table{
 	text-align: center;
 }
-.cs
-{
-	border: 1px solid #EEEEEE;
-	cellpadding: 0;
-	cellspacing: 0;
+button, table{
+	animation-name: fade;
+	animation-duration: 1.5s;
+	animation-delay: 1.25s;
+	opacity: 0;
+	animation-fill-mode: forwards;
 }
-.slider
-{
+@keyframes fade {
+  from {opacity: 0;}
+  to {opacity: 1;}
+}
+table{
 	width: 100%;
+	border-spacing: 4px 10px;
+}
+td{
+	padding: 5px;
+}
+tr{
+	background: #111;
+	transition: all .5s;
+}
+tr:nth-child(even){
+	background: #222;
+}
+tr:hover{
+	background: #444;
+}
+td:nth-child(4){
+	color: red;
+	transition: all .25s;
+}
+td:hover:nth-child(4){
+	background: red;
+	color: white;
+	cursor: pointer;
+}
+input, select, button{
+	background: #555;
+	border: 0;
+	color: white;
+	width: 50px;
+	padding: 8px;
+	font-size: 14px
+}
+button{
+	width: auto;
+}
+select{
+	width: auto;
+}
+img{
+	position: relative;
+	top: 5px;
+}
+p{
+	text-align: center;
+}
+i{
+	opacity: 0;
 }
 </style>
+<meta name="viewport" content="width=device-width, initial-scale=1">
 </head>
 
 <body onload=init()>
-<table class=ts id=t>
+<i>.</i>
+<h1><img src="data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAACoAAAAoCAYAAACIC2hQAAABmElEQVR4Ae2WIWzzMBCFA39ojsJLzFE4Mvm5OQpH5ijjJBwFDhqMy2i4HJlOmnR7lR44WW4zRW2dTgEfuXvJfY17TTsReQkO0UP03nyfTiMICrc7UYpJBfsqov3eRMea6B6PfqiI5j2K9iAXotNDRTHAgggC8NWFeOsGEojhdYGMzDn2PfN9McuAgdfM+sNtXQx3GQIykAqhdi/2akyclcpZW0XPYAEGN78Q7yCagecsD+IWUX0cptansAMTSBzurmQTxRYwArvylbPHK/RLOgsy8KpmQAJzc1EK9ZQU4lhPqjbtQXQAogisiyIeoofoOoeoURuegWV9VqK+taiWXYAt6tMWyePN9O/jfwAJmKI+gghsc1EKCgmqbkBWPddElDI9EEUunqYo5paivpBZVM8WvfOeRMein3chSplIkbmyTA6c2R9ai9pbElyq9j/43fun/0XGXmgiisEGRCAgrOQy8S1EZyAKeyW3FLn+2aKxEBi25x4rmgoBcyU3FTnX8ujTjZxTuQzsM0X1U12AWck5Sro/+TfvBz33qxiwXPx/AAAAAElFTkSuQmCC" alt="" /> WOW Pixel Driver</h1>
+<table id=t>
 <tr>
-	<td class=cs>Index</td>
-	<td class=cs>Animation</td>
-	<td class=cs>Duration</td>
-	<td class=cs>Util</td>
+	<td>Index</td>
+	<td>Animation</td>
+	<td>Duration</td>
 </tr>
 </table>
-<div alight=right onClick=addAnimationToQue()>Add Animation</div>
+<p><button onClick=addAnimationToQue()>+ Animation</button></p>
 </body>
 
 <script language="JavaScript">
+setTimeout(function(){
+	window.scrollTo(0, 0);
+}, 10)
 var animCnt, queCnt;
 var rCnt, cCnt, aCnt;
 var tr, td, tObj, dropDown, dropDownItem, slider, ltext;
 var animationNameList = Array();
 var animationDurationList = Array();
-//animationNames will be downlaoded ONLOAD from the MICRO as a plain text list like as hardcoded at the moment
 var animationNames = "vectorFadeSwirl,vectorTrace,pointTest,vectorSwirl,verticalMovingDrag,polyRotator,washMatrix,fallingRainDrops,linerGradientUp,xWave,rotationalGradientSwipe,linerGradientOut,midCircle,rainbowFader,outerCircle,verSlitRainbows,pondDrops,midRainDrops,fallingRainDrops,rainbowFaderUpStream,yWave,rainbowSwipe,midRainDrops,horizontalMovingDrag,smoothMatrix,colourDrag";
-//animationDurations will be downlaoded ONLOAD from the MICRO as a plain text list like as hardcoded at the moment
 var animationDurations = "10,10,10,10,10,10,10,10,10,10,10,10,10,10,10,10,10,10,10,10,10,10,10,10,10,10";
-//Its then built up into the QUE list animationQue by configureAnimations()
 var animationQue = Array();
+var arrayBuffer;
 
 function init()
 {
-	//Set up animation Que array
 	configureAnimations();
-	//Build the UI using this list
 	buildTable();
+	pull();
 }
 
 function buildTable()
@@ -60,22 +123,17 @@ function buildTable()
 	tObj = document.getElementById('t');
 	for(rCnt=0; rCnt<queCnt; rCnt++)
 	{
-		//create row
 		tr = tObj.insertRow(rCnt+1);
 		tr.setAttribute('id', 'anind'+rCnt);		
 
-		//animation index
 		td = document.createElement('td');
 		td = tr.insertCell(0);
-		td.setAttribute('class', 'cs');
 		ltext = document.createElement('div');
 		ltext.innerHTML = rCnt+1;
 		td.appendChild(ltext);
 		
-		//animation sleector cell
 		td = document.createElement('td');
 		td = tr.insertCell(1);
-		td.setAttribute('class', 'cs');
 		dropDown = document.createElement('select');
 		dropDown.setAttribute('id', "ap"+rCnt);
 		dropDown.setAttribute('onChange', 'setAnimation('+rCnt+')');
@@ -88,36 +146,25 @@ function buildTable()
 			dropDown.appendChild(dropDownItem);
 			td.appendChild(dropDown);
 		}	
-		//Duration Slider
 		td = document.createElement('td');
 		td = tr.insertCell(2);
 		td.setAttribute('class', 'cs');
 		slider = document.createElement('input');
 		slider.setAttribute('id', 'ad'+rCnt);
-		slider.setAttribute('class', 'slider');
-		slider.setAttribute('type', 'range');
-		slider.setAttribute('min', '1');
-		slider.setAttribute('max', '100');
+		slider.setAttribute('type', 'number');
 		slider.setAttribute('value', animationQue[rCnt][1]);
 		slider.setAttribute('onChange', 'setAnimationDuration('+rCnt+')');
 		td.appendChild(slider);
-		//slider value output
-		ltext = document.createElement('div');
-		ltext.setAttribute('id', 'st'+rCnt);
-		ltext.innerHTML = animationQue[rCnt][1]+' S';
-		td.appendChild(ltext);
+		td.innerHTML += ' Seconds';
 		
-		//utility
 		td = document.createElement('td');
 		td = tr.insertCell(3);
-		td.setAttribute('class', 'cs');
 		ltext = document.createElement('div');
 		ltext.setAttribute('id', 'del'+rCnt);
 		ltext.setAttribute('onClick', 'removeAnimationFromQue('+rCnt+')');
-		ltext.innerHTML = 'Delete';
+		ltext.innerHTML = '&#10060;';
 		td.appendChild(ltext);
 	}
-	//set Selected Items
 	for(aCnt=0; aCnt<queCnt; aCnt++)
 	{
 		for(rCnt=0; rCnt<animCnt; rCnt++)
@@ -147,7 +194,6 @@ function configureAnimations()
 
 function clearUI()
 {
-	//Blows away the entire table UI
 	tObj = document.getElementById('t');
 	for(rCnt=queCnt; rCnt>0; rCnt--)
 	{
@@ -157,22 +203,17 @@ function clearUI()
 
 function setAnimationDuration(sliderIndex)
 {
-	//sets the duration at onChange event of the selected slider
 	animationQue[sliderIndex][1] = document.getElementById('ad'+sliderIndex).value;
-	document.getElementById('st'+sliderIndex).innerHTML = document.getElementById('ad'+sliderIndex).value+' S';
 }
 
 function setAnimation(sliderIndex)
 {
-	//sets the animaition at onChange event of the selected animation picker
 	animationQue[sliderIndex][0] = document.getElementById('ap'+sliderIndex).value;
 }
 
 function removeAnimationFromQue(index)
 {
-	//blow away the UI table
 	clearUI();
-	//Recreate the QUE without the deleted item
 	var tempAnimationQue = Array();
 	for(rCnt=0; rCnt<queCnt; rCnt++)
 	{
@@ -187,22 +228,92 @@ function removeAnimationFromQue(index)
 	{
 		animationQue.push(Array(tempAnimationQue[rCnt][0], tempAnimationQue[rCnt][1]));
 	}
-	delete tempAnimationQue;
-	//Rebuild the UI table
+	//delete tempAnimationQue;
 	buildTable();
+
+	setTimeout(function(){
+
+	document.activeElement = null;
+},300)
 	
 }
 
 function addAnimationToQue()
 {
-	//Blow away the UI table
 	clearUI();
-	//Add a blank animation to the end of the que
 	animationQue.push(Array(animationNameList[0], 10));
 	queCnt = animationQue.length;
-	//rebuild the UI
 	buildTable();
 }
 
+function pull()
+{
+	var byteCnt=0, innerQCnt=0;
+	
+	var oReq = new XMLHttpRequest();
+	oReq.open("GET", "http://10.10.10.1/pull", true);
+	oReq.responseType = "arraybuffer";
+	oReq.onload = function (oEvent) 
+	{
+		arrayBuffer = oReq.response;
+		if (arrayBuffer)
+		{
+			clearUI();
+			var byteArray = new Uint8Array(arrayBuffer);
+			animationQue = new Array();
+			for(byteCnt=0; byteCnt<byteArray.byteLength/2; byteCnt++)
+			{
+			  animationQue.push(Array(animationNameList[byteArray[byteCnt]], 10));
+			}
+			for(byteCnt=0; byteCnt<byteArray.byteLength; byteCnt++)
+			{
+			  animationQue[innerQCnt][1] = byteArray[byteCnt];
+			  innerQCnt++;
+			}			
+			queCnt = byteArray.byteLength/2;
+			buildTable();
+		} 
+	};
+	oReq.send(null);
+}
+
+function push()
+{
+	var byteArray = new Uint8Array(queCnt*2);
+	var qlCnt = 0, qLDCnt=0;
+	var testSTring='';
+	var oReq = new XMLHttpRequest();
+	
+	for(qlCnt=0; qlCnt<queCnt; qlCnt++)
+	{
+		byteArray[qLDCnt] = getAnimationIndex(animationQue[qlCnt][0]);
+		testSTring+=getAnimationIndex(animationQue[qlCnt][0])+'|';
+		qLDCnt++;
+	}
+	for(qlCnt=0; qlCnt<queCnt; qlCnt++)
+	{
+		byteArray[qLDCnt] = animationQue[qlCnt][1];
+		testSTring+=animationQue[qlCnt][1]+',';
+		qLDCnt++;
+	}
+	oReq.open("POST", 'http://10.10.10.1/push', true);
+	oReq.onload = function (oEvent)
+	{
+		  console.log("Config Sent. Got back["+oReq.response+"]");
+	};
+	oReq.send(byteArray);
+}
+
+function getAnimationIndex(animationName)
+{
+	var aICnt=0;
+	for(aICnt=0; aICnt<animationNameList.length; aICnt++)
+	{
+		if(animationNameList[aICnt]==animationName)
+		{
+			return aICnt;
+		}
+	}
+}
 </script>
 </html>
