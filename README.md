@@ -10,7 +10,7 @@ An ESP32 version is contained in the ESP32 folder. The only differences being
 
 
 # A Note on using this in the real world
-Im using the FLASH button on the ESP8266 module to put the device into config mode. In real world systems, you will need to change this to a usable GPIO pin
+Im using the FLASH button on the ESP8266/32 module to put the device into config mode. In real world systems, you will need to change this to a usable GPIO pin.
 
 # Pre Flight
 The main code has the following var
@@ -63,10 +63,16 @@ hasTimedOut() will return 1 if its timer has expired. This is how I do it, its n
 
 SET ESP SPIFS size to 2MB 
 
-1. Upload to ESP8266 with "ERASE ALL FLASH CONTENTS"
-2. Wait for SPIFS init(format takes 5-10 Seconds) on serail monitor. the esp will reboot after its created its default file system
-3. Use FS manager to upload the file "index" in the data folder(ill remove the html its just there for ui testing)
-4. Manualy restart the ESP via reboot push button
+1. Download & Install the ESP8266 SPIFS File Upload uitlity https://github.com/esp8266/arduino-esp8266fs-plugin
+2. Upload to ESP8266 with "ERASE ALL FLASH CONTENTS"
+3. Wait for SPIFS init(format takes 5-10 Seconds) on serail monitor. the esp will reboot after its created its default file system
+4. Use FS manager to upload the file "index" in the data folder(ill remove the html its just there for ui testing)
+5. Manualy restart the ESP via reboot push button
+
+# How to upload to your ESP2
+1. Download & Install the ESP32 SPIFS File Upload uitlity  https://github.com/me-no-dev/arduino-esp32fs-plugin/releases/
+2. Upload the "index" file in the data folder
+3. Upload the INO to your ESP32 via the standard Arduino IDE method
 
 To load UI:
 1. Connect to the ESP network
