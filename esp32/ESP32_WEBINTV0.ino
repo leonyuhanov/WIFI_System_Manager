@@ -1,6 +1,7 @@
-#include <ESP8266WiFi.h>
-#include <ESP8266WebServer.h>
+#include <WiFi.h>
+#include <WebServer.h>
 #include "FS.h"
+#include "SPIFFS.h"
 #include <string>
 
 const char* configFilePath="/configFile";
