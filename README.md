@@ -1,7 +1,13 @@
 # WIFI_System_Manager
 A web based configuration system for wearable applications using an ESP8266
 
-An ESP32 version will come soon, there is a major diference in the way the webserver lib handles POST data
+An ESP32 version is contained in the ESP32 folder. The only differences being
+- Different WIFI include names
+- Different SPIFS include names
+- Different method of detecting if a file exists on the SPIFS
+- Different method of TX data from the UI to the ESP
+- Different metho dof RX data from the UI to the ESP
+
 
 # A Note on using this in the real world
 Im using the FLASH button on the ESP8266 module to put the device into config mode. In real world systems, you will need to change this to a usable GPIO pin
