@@ -17,7 +17,7 @@ const char* defaultAnimationList = "Animation1,Animation2,Animation3,Animation4,
 ```
 This list is used to populate the default configuration & is sent as the list of available animations to the UI. a "," is used a seperator. DO not use spaces or any charectors that your C compiler would like you to use in naming a function. Keep it simple
 
-You will need then need to populate the file with your animations and create an ORDERED switch statment call for each
+You will need to populate the file with your animations and create an ORDERED switch statement call for each
 In the "data\index" file:
 - You will need to populate the var "animationNames" in the same way
 - Alter the var "animationDurations" with a list of detault durations per animation eg if you have 5 animations the list will be var animationDurations = "10,10,10,10,10"
