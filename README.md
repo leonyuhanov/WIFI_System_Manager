@@ -1,6 +1,6 @@
 # WIFI_System_Manager
 A web based configuration system for wearable applications using an ESP8266
-You could reconfigure this for the ESP32 by changing a few lines of code, specific to WIFI, everything else should work the same way as long as you have an SPIFS set up
+An ESP32 version will come soon, there is a major diference in the way the webserver lib handles POST data
 
 # A Note on using this in the real world
 Im using the FLASH button on the ESP8266 module to put the device into config mode. In real world systems, you will need to change this to a usable GPIO pin
@@ -18,6 +18,9 @@ const char* defaultAnimationList = "Animation1,Animation2,Animation3,Animation4,
 This list is used to populate the default configuration & is sent as the list of available animations to the UI. a "," is used a seperator. DO not use spaces or any charectors that your C compiler would like you to use in naming a function. Keep it simple
 
 You will need then need to populate the file with your animations and create an ORDERED switch statment call for each
+In the "data\index" file:
+- You will need to populate the var "animationNames" in the same way
+- Alter the var "animationDurations" with a list of detault durations per animation eg if you have 5 animations the list will be var animationDurations = "10,10,10,10,10"
 ```C++
 void runAnimation(unsigned short int animationIndex, unsigned short int animationDuration)
 {
